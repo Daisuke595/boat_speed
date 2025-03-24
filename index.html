@@ -12,18 +12,54 @@ function getLocation() {
 
 // 位置情報を表示する関数
 function displayLocation(position) {
-    let geo_text = "緯度:" + position.coords.latitude + "\n";
-    geo_text += "経度:" + position.coords.longitude + "\n";
-    geo_text += "高度:" + position.coords.altitude + "\n";
-    geo_text += "位置精度:" + position.coords.accuracy + "\n";
-    geo_text += "高度精度:" + position.coords.altitudeAccuracy  + "\n";
-    geo_text += "移動方向:" + position.coords.heading + "\n";
-    geo_text += "速度:" + position.coords.speed + "\n";
 
-    let date = new Date(position.timestamp);
-    geo_text += "取得時刻:" + date.toLocaleString() + "\n";
+    // 各データを個別にコンソールに出力
+    console.log("緯度:", position.coords.latitude);
+    console.log("経度:", position.coords.longitude);
+    console.log("高度:", position.coords.altitude);
+    console.log("位置精度:", position.coords.accuracy);
+    console.log("高度精度:", position.coords.altitudeAccuracy);
+    console.log("移動方向:", position.coords.heading);
+    console.log("速度:", position.coords.speed);
 
-    alert(geo_text);
+    // 現在時刻を取得
+    const currentTimestamp = Date.now(); // 現在のタイムスタンプを取得
+    const currentDate = new Date(currentTimestamp);
+    // Safari互換性のためにスラッシュ区切り形式に変換
+    const dateStr = currentDate.toISOString().slice(0, 19).replace("T", " ");
+    const fixedDateStr = dateStr.replace(/-/g, '/');
+    // 日本語ロケールでフォーマット
+    // 日本標準時（JST）でフォーマット
+    const formattedDate = currentDate.toLocaleString('ja-JP', {
+        timeZone: 'Asia/Tokyo', // タイムゾーンを明確に指定
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    console.log("取得時刻:", formattedDate);
+
+
+
+    // 位置情報を取得して文字列を生成
+    const geo_text = `
+        緯度: ${position.coords.latitude}, 
+        経度: ${position.coords.longitude}, 
+        高度: ${position.coords.altitude}, 
+        位置精度: ${position.coords.accuracy}, 
+        高度精度: ${position.coords.altitudeAccuracy}, 
+        移動方向: ${position.coords.heading}, 
+        速度: ${position.coords.speed}, 
+        取得時刻: ${formattedDate}
+    `;
+
+    // ページ上に表示
+    const dataList = document.getElementById("dataList");
+    const listItem = document.createElement("li");
+    listItem.textContent = geo_text;
+    dataList.appendChild(listItem); // 新しいデータをリストに追加
 }
 
 // 設定時刻ごとに位置情報を取得する関数
@@ -49,6 +85,17 @@ function stopTracking() {
         alert("位置情報の取得を停止しました。");
     }
 }
+
+function formatDateForSafari(positionTimestamp) {
+    // タイムスタンプを文字列形式の日付に変換
+    const dateStr = new Date(positionTimestamp).toISOString().slice(0, 19).replace("T", " ");
+    // Safari互換性のためにハイフンをスラッシュに変換
+    const fixedDateStr = dateStr.replace(/-/g, '/');
+    // 日本語ロケールで日時をフォーマット
+    const formattedDate = new Date(fixedDateStr).toLocaleString('ja-JP');
+    return formattedDate;
+}
+
 </script>
 </head>
 <body>
@@ -64,6 +111,10 @@ function stopTracking() {
 <!-- ボタンで開始・停止 -->
 <button onclick="startTracking()">開始</button>
 <button onclick="stopTracking()">停止</button>
+
+<!-- データ表示エリア -->
+<h2>取得した位置情報:</h2>
+<ul id="dataList"></ul>
 
 </body>
 </html>
