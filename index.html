@@ -3,13 +3,16 @@
 <head>
 <meta charset="utf-8">
 <script>
-function test() {
-    navigator.geolocation.getCurrentPosition(test2);
+let intervalId = null; // タイマーIDを格納する変数
+
+// 位置情報を取得する関数
+function getLocation() {
+    navigator.geolocation.getCurrentPosition(displayLocation);
 }
 
-function test2(position) {
-
-    var geo_text = "緯度:" + position.coords.latitude + "\n";
+// 位置情報を表示する関数
+function displayLocation(position) {
+    let geo_text = "緯度:" + position.coords.latitude + "\n";
     geo_text += "経度:" + position.coords.longitude + "\n";
     geo_text += "高度:" + position.coords.altitude + "\n";
     geo_text += "位置精度:" + position.coords.accuracy + "\n";
@@ -17,18 +20,50 @@ function test2(position) {
     geo_text += "移動方向:" + position.coords.heading + "\n";
     geo_text += "速度:" + position.coords.speed + "\n";
 
-    var date = new Date(position.timestamp);
-
+    let date = new Date(position.timestamp);
     geo_text += "取得時刻:" + date.toLocaleString() + "\n";
 
     alert(geo_text);
+}
 
+// 設定時刻ごとに位置情報を取得する関数
+function startTracking() {
+    // 既存のタイマーがあればクリア
+    if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+
+    // 選択された間隔を取得
+    const interval = document.querySelector('input[name="interval"]:checked').value;
+
+    // 指定された間隔（ミリ秒）ごとに位置情報を取得
+    intervalId = setInterval(getLocation, parseInt(interval));
+}
+
+// トラッキングを停止する関数
+function stopTracking() {
+    if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+        alert("位置情報の取得を停止しました。");
+    }
 }
 </script>
 </head>
 <body>
 
-<button onclick="test()">test</button>
+<h1>位置情報取得プログラム</h1>
+
+<!-- ラジオボタンで間隔を選択 -->
+<p>位置情報の取得間隔を選択してください:</p>
+<label><input type="radio" name="interval" value="10000" checked> 10秒</label><br>
+<label><input type="radio" name="interval" value="15000"> 15秒</label><br>
+<label><input type="radio" name="interval" value="20000"> 20秒</label><br>
+
+<!-- ボタンで開始・停止 -->
+<button onclick="startTracking()">開始</button>
+<button onclick="stopTracking()">停止</button>
 
 </body>
 </html>
