@@ -4,6 +4,24 @@
 <meta charset="utf-8">
 <script>
 let intervalId = null; // タイマーIDを格納する変数
+let lastPosition = null; // 前回の位置情報を保存する変数
+
+// 2点間の距離をメートル単位で計算する関数（ハバーサイン公式）
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // 地球の半径（メートル）
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return distance; // メートル単位での距離
+}
 
 // 位置情報を取得する関数
 function getLocation() {
@@ -16,11 +34,11 @@ function displayLocation(position) {
     // 各データを個別にコンソールに出力
     console.log("緯度:", position.coords.latitude);
     console.log("経度:", position.coords.longitude);
-    console.log("高度:", position.coords.altitude);
-    console.log("位置精度:", position.coords.accuracy);
-    console.log("高度精度:", position.coords.altitudeAccuracy);
-    console.log("移動方向:", position.coords.heading);
-    console.log("速度:", position.coords.speed);
+    //console.log("高度:", position.coords.altitude);
+    //console.log("位置精度:", position.coords.accuracy);
+    //console.log("高度精度:", position.coords.altitudeAccuracy);
+    //console.log("移動方向:", position.coords.heading);
+    //console.log("速度:", position.coords.speed);
 
     // 現在時刻を取得
     const currentTimestamp = Date.now(); // 現在のタイムスタンプを取得
@@ -41,25 +59,60 @@ function displayLocation(position) {
     });
     console.log("取得時刻:", formattedDate);
 
-
+    // 計算した速度の情報
+    let calculatedSpeed = "未計算（初回取得）";
+    let distanceTraveled = "未計算";
+    let timeDiff = "未計算";
+    
+    // 前回の位置情報がある場合は距離と速度を計算
+    if (lastPosition) {
+        // 2点間の距離をメートル単位で計算
+        const distance = calculateDistance(
+            lastPosition.coords.latitude, 
+            lastPosition.coords.longitude,
+            position.coords.latitude, 
+            position.coords.longitude
+        );
+        
+        // 時間差（秒）を計算
+        const timeElapsed = (currentTimestamp - lastPosition.timestamp) / 1000;
+        
+        // 速度（m/s）を計算
+        const speed = distance / timeElapsed;
+        
+        // km/hに変換
+        const speedKmh = speed * 3.6;
+        
+        // 計算結果を文字列に格納
+        distanceTraveled = `${distance.toFixed(2)} m`;
+        timeDiff = `${timeElapsed.toFixed(2)} 秒`;
+        calculatedSpeed = `${speed.toFixed(2)} m/s (${speedKmh.toFixed(2)} km/h)`;
+    }
 
     // 位置情報を取得して文字列を生成
     const geo_text = `
         緯度: ${position.coords.latitude}, 
         経度: ${position.coords.longitude}, 
-        高度: ${position.coords.altitude}, 
         位置精度: ${position.coords.accuracy}, 
-        高度精度: ${position.coords.altitudeAccuracy}, 
-        移動方向: ${position.coords.heading}, 
-        速度: ${position.coords.speed}, 
         取得時刻: ${formattedDate}
+        前回からの距離: ${distanceTraveled},
+        経過時間: ${timeDiff},
+        計算速度: ${calculatedSpeed}
     `;
 
     // ページ上に表示
     const dataList = document.getElementById("dataList");
     const listItem = document.createElement("li");
     listItem.textContent = geo_text;
-    dataList.appendChild(listItem); // 新しいデータをリストに追加
+    dataList.appendChild(listItem); 
+        // 今回の位置情報を保存（タイムスタンプも含める）
+    lastPosition = {
+        coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        },
+        timestamp: currentTimestamp
+    };
 }
 
 // 設定時刻ごとに位置情報を取得する関数
@@ -82,6 +135,7 @@ function stopTracking() {
     if (intervalId !== null) {
         clearInterval(intervalId);
         intervalId = null;
+        lastPosition = null; // 前回の位置情報をリセット
         alert("位置情報の取得を停止しました。");
     }
 }
