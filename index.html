@@ -2,10 +2,103 @@
 <html>
 <head>
 <meta charset="utf-8">
+<style>
+#compassRose {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+canvas#compassRose {
+    display: block;
+    margin-bottom: 10px;
+    position: static;
+    top: auto;
+    right: auto;
+}
+</style>
 <script>
 let intervalId = null; // タイマーIDを格納する変数
 let lastPosition = null; // 前回の位置情報を保存する変数
 let lastSpeed = null;
+
+function updateSpeedChangeIndicator(speedChange) {
+    const indicator = document.getElementById('speedChangeIndicator');
+    
+    if (speedChange === "UP") {
+        indicator.innerHTML = '&#x2B06;'; // 上向き矢印
+        indicator.style.color = 'blue';
+    } else if (speedChange === "DOWN") {
+        indicator.innerHTML = '&#x2B07;'; // 下向き矢印
+        indicator.style.color = 'pink';
+    } else {
+        indicator.innerHTML = ''; // 初回取得時は表示しない
+    }
+}
+
+function drawCompassRose(bearing) {
+    const canvas = document.getElementById('compassRose');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10;
+    
+    // キャンバスをクリア
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 外側の円を描画
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // 方位マークを描画（N, E, S, W）
+    ctx.font = '14px Arial';
+    ctx.fillStyle = 'black';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', centerX, centerY - radius + 15);
+    ctx.fillText('E', centerX + radius - 15, centerY);
+    ctx.fillText('S', centerX, centerY + radius - 15);
+    ctx.fillText('W', centerX - radius + 15, centerY);
+    
+    // 方位線を描画
+    for (let i = 0; i < 360; i += 15) {
+        const angle = (i - 90) * Math.PI / 180;
+        const length = i % 90 === 0 ? radius - 20 : (i % 45 === 0 ? radius - 15 : radius - 10);
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX + Math.cos(angle) * length, centerY + Math.sin(angle) * length);
+        ctx.lineTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
+        ctx.stroke();
+    }
+    
+    // 移動方位を示す矢印を描画
+    const arrowAngle = (bearing - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(centerX + Math.cos(arrowAngle) * (radius - 5), centerY + Math.sin(arrowAngle) * (radius - 5));
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // 矢印の先端を描画
+    const headLength = 15;
+    const headAngle1 = arrowAngle - Math.PI / 8;
+    const headAngle2 = arrowAngle + Math.PI / 8;
+    
+    ctx.beginPath();
+    ctx.moveTo(centerX + Math.cos(arrowAngle) * (radius - 5), centerY + Math.sin(arrowAngle) * (radius - 5));
+    ctx.lineTo(centerX + Math.cos(headAngle1) * (radius - headLength), centerY + Math.sin(headAngle1) * (radius - headLength));
+    ctx.lineTo(centerX + Math.cos(headAngle2) * (radius - headLength), centerY + Math.sin(headAngle2) * (radius - headLength));
+    ctx.closePath();
+    ctx.fillStyle = 'red';
+    ctx.fill();
+}
 
 function calculateBearing(lat1, lon1, lat2, lon2) {
     const φ1 = lat1 * Math.PI / 180;
@@ -110,6 +203,7 @@ function displayLocation(position) {
         if (lastSpeed !== null) {
             speedChange = speed > lastSpeed ? "UP" : "DOWN";
             speedDifference = Math.abs(speed - lastSpeed);
+            updateSpeedChangeIndicator(speedChange);
         }
 
         console.log("速度変化:", speedChange);
@@ -124,9 +218,11 @@ function displayLocation(position) {
                 position.coords.latitude,
                 position.coords.longitude
             );
-        console.log("移動方位:", bearing.toFixed(2), "度");
-}
-
+            console.log("移動方位:", bearing.toFixed(2), "度");
+    
+            // 方位図を更新
+            drawCompassRose(bearing);
+        }
     }
 
     // 位置情報を取得して文字列を生成
@@ -156,6 +252,11 @@ function displayLocation(position) {
         },
         timestamp: currentTimestamp
     };
+
+    
+
+
+
 }
 
 // 設定時刻ごとに位置情報を取得する関数
@@ -208,6 +309,13 @@ function formatDateForSafari(positionTimestamp) {
 <!-- ボタンで開始・停止 -->
 <button onclick="startTracking()">開始</button>
 <button onclick="stopTracking()">停止</button>
+
+
+<div style="display: flex; align-items: center;">
+    <canvas id="compassRose" width="150" height="150"></canvas>
+    <div id="speedChangeIndicator" style="margin-left: 10px; font-size: 24px;"></div>
+</div>
+  
 
 <!-- データ表示エリア -->
 <h2>取得した位置情報:</h2>
