@@ -25,8 +25,9 @@ let intervalId = null; // タイマーIDを格納する変数
 let lastPosition = null; // 前回の位置情報を保存する変数
 let lastSpeed = null;
 
-function updateSpeedChangeIndicator(speedChange) {
+function updateSpeedChangeIndicator(speedChange, speedDifference) {
     const indicator = document.getElementById('speedChangeIndicator');
+    const diffValue = document.getElementById('speedDifferenceValue');
     
     if (speedChange === "UP") {
         indicator.innerHTML = '&#x2B06;'; // 上向き矢印
@@ -36,6 +37,13 @@ function updateSpeedChangeIndicator(speedChange) {
         indicator.style.color = 'pink';
     } else {
         indicator.innerHTML = ''; // 初回取得時は表示しない
+    }
+    
+    // 速度差分の値を表示
+    if (speedChange !== "初回取得") {
+        diffValue.textContent = speedDifference.toFixed(2) + " m/s";
+    } else {
+        diffValue.textContent = "";
     }
 }
 
@@ -203,7 +211,7 @@ function displayLocation(position) {
         if (lastSpeed !== null) {
             speedChange = speed > lastSpeed ? "UP" : "DOWN";
             speedDifference = Math.abs(speed - lastSpeed);
-            updateSpeedChangeIndicator(speedChange);
+            updateSpeedChangeIndicator(speedChange, speedDifference);
         }
 
         console.log("速度変化:", speedChange);
@@ -314,6 +322,7 @@ function formatDateForSafari(positionTimestamp) {
 <div style="display: flex; align-items: center;">
     <canvas id="compassRose" width="150" height="150"></canvas>
     <div id="speedChangeIndicator" style="margin-left: 10px; font-size: 24px;"></div>
+    <div id="speedDifferenceValue" style="margin-left: 5px;"></div>
 </div>
   
 
