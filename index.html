@@ -94,10 +94,10 @@ function displayLocation(position) {
         緯度: ${position.coords.latitude}, 
         経度: ${position.coords.longitude}, 
         位置精度: ${position.coords.accuracy}, 
-        取得時刻: ${formattedDate}
-        前回からの距離: ${distanceTraveled},
+        時刻: ${formattedDate}
+        距離: ${distanceTraveled},
         経過時間: ${timeDiff},
-        計算速度: ${calculatedSpeed}
+        速度: ${calculatedSpeed}
     `;
 
     // ページ上に表示
@@ -105,7 +105,7 @@ function displayLocation(position) {
     const listItem = document.createElement("li");
     listItem.textContent = geo_text;
     dataList.appendChild(listItem); 
-        // 今回の位置情報を保存（タイムスタンプも含める）
+    // 今回の位置情報を保存（タイムスタンプも含める）
     lastPosition = {
         coords: {
             latitude: position.coords.latitude,
