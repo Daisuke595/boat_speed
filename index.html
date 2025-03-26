@@ -19,6 +19,12 @@ canvas#compassRose {
     top: auto;
     right: auto;
 }
+
+.radio-group label {
+  display: inline-block;
+  margin-right: 10px;
+}
+
 </style>
 <script>
 let intervalId = null; // タイマーIDを格納する変数
@@ -310,22 +316,24 @@ function formatDateForSafari(positionTimestamp) {
 
 <!-- ラジオボタンで間隔を選択 -->
 <p>位置情報の取得間隔を選択してください:</p>
-<label><input type="radio" name="interval" value="10000" checked> 10秒</label><br>
-<label><input type="radio" name="interval" value="15000"> 15秒</label><br>
-<label><input type="radio" name="interval" value="20000"> 20秒</label><br>
-
+<div class="radio-group">
+    <label><input type="radio" name="interval" value="10000" checked> 10秒</label>
+    <label><input type="radio" name="interval" value="15000"> 15秒</label>
+    <label><input type="radio" name="interval" value="20000"> 20秒</label>
+</div>
+  
 <!-- ボタンで開始・停止 -->
 <button onclick="startTracking()">開始</button>
 <button onclick="stopTracking()">停止</button>
-
-
+<br>
+<div style="margin-bottom: 20px;"></div>
 <div style="display: flex; align-items: center;">
     <canvas id="compassRose" width="150" height="150"></canvas>
-    <div id="speedChangeIndicator" style="margin-left: 10px; font-size: 24px;"></div>
-    <div id="speedDifferenceValue" style="margin-left: 5px;"></div>
+    <div id="speedChangeIndicator" style="margin-left: 10px; font-size: 70px;"></div>
+    <div id="speedDifferenceValue" style="margin-left: 5px; font-size: 70px;"></div>
+    
 </div>
   
-
 <!-- データ表示エリア -->
 <h2>取得した位置情報:</h2>
 <ul id="dataList"></ul>
